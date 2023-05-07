@@ -58,6 +58,11 @@ class Show():
         log.debug('setting the vertex attributes')
         gl.glVertexAttribPointer(self.attr_id, 2, gl.GL_FLOAT, False, 0, None)
         gl.glEnableVertexAttribArray(self.attr_id)  # use currently bound VAO
+        
+        # Opacity doesn't work on Windows 10 and ?Wayland
+        if not sys.platform.startswith("win"):
+            gl.glEnable(gl.GL_BLEND)
+            gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
 
         log.debug('creating framebuffers')
         self.texture, self.fbo = create_framebuffer(self.width, self.height)
@@ -174,9 +179,6 @@ class Show():
         gl.glViewport(0, 0, int(self.width * Config.QUALITY), int(self.height * Config.QUALITY))
         gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, self.fbo)
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
-
-        gl.glEnable(gl.GL_BLEND)
-        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
 
         # Update all components
         for c in self.components:
