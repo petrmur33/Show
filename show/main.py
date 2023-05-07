@@ -53,6 +53,7 @@ def main():
     all_args.add_argument("-qm", "--qualitymode", help="Set it to pixelize or smoothen the image at lower quality. default: smooth; modes: pixel, smooth", default=Config.QUALITY_MODE, type=QualityMode)
     all_args.add_argument("-width", "--width", help="Set window width", default=900, type=int)
     all_args.add_argument("-height", "--height", help="Set window height", default=600, type=int)
+    all_args.add_argument("-vsync", "--vsync", help="Set VSync, default off", default=VSync.DISABLE, type=VSync)
 
     args, files = all_args.parse_known_args()
     args = vars(args)
@@ -68,9 +69,13 @@ def main():
     Config.DISPLAY = args["display"]
     Config.FRAMELIMIT = args["framelimit"]
     Config.QUALITY_MODE = args["qualitymode"]
+    Config.VSYNC = args["vsync"]
 
     monitor = parse_argument_monitor(Config.DISPLAY)
-    frameLimiter = FrameLimiter(Config.FRAMELIMIT)
+    if Config.VSYNC == VSync.ENABLE:
+        frameLimiter = FrameLimiter("vsync")
+    else:
+        frameLimiter = FrameLimiter(Config.FRAMELIMIT)
 
     if not sys.platform.startswith("linux") and (Config.BACKGROUND_MODE == BackgroundMode.BACKGROUND or Config.BACKGROUND_MODE == BackgroundMode.ROOT):
         print("This mode is not supported by your current operating system.")

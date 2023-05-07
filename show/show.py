@@ -163,6 +163,10 @@ class Show():
         log.debug('making created window opengl context')
         glfw.make_context_current(window)
 
+        # VSync
+        if Config.VSYNC == VSync.ENABLE:
+            glfw.swap_interval(1)
+
         return window
 
     def render(self, dt):

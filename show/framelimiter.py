@@ -4,7 +4,8 @@ import time
 log = logging.getLogger(__name__)
 
 class FrameLimiter():
-    def __init__(self, limit) -> None:
+    def __init__(self, limit: int | str) -> None:
+        self.vsync = True if limit == "vsync" else False
         self.limit = limit
         self.old = time.time()
         self.elapsed = 0
@@ -16,7 +17,8 @@ class FrameLimiter():
         dt = now - self.old
 
         # sleep to reach frame rate limit
-        time.sleep(max(1 / self.limit - dt, 0))
+        if not self.vsync:
+            time.sleep(max(1 / self.limit - dt, 0))
 
         # calculate deltatime
         now = time.time()
@@ -32,4 +34,6 @@ class FrameLimiter():
             self.elapsed = 0
             self.frames = 0
 
-        return max(1 / self.limit, dt)
+        if not self.vsync:
+            return max(1 / self.limit, dt)
+        return dt
