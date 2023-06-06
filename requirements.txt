@@ -6,3 +6,4 @@ mouse==0.7.1
 glfw==2.5.3
 scipy==1.8.1
 PyQt6==6.4.2
+PyAudio==0.2.13

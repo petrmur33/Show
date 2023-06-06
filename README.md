@@ -61,7 +61,7 @@ options:
                         Set window width
   -height HEIGHT, --height HEIGHT
                         Set window height
-	-vsync VSYNC, --vsync VSYNC
+  -vsync VSYNC, --vsync VSYNC
                         Set VSync, default off
 ```
 

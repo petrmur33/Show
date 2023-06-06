@@ -9,6 +9,7 @@ import logging
 import argparse
 import sys
 import glfw
+import pyaudio
 
 log = logging.getLogger(__name__)
 
@@ -18,6 +19,17 @@ def get_default_monitor():
         if monitor.is_primary:
             return monitor
     return monitors[0]
+
+def parse_argument_audio(select):
+    p = pyaudio.PyAudio()
+    count = p.get_device_count()
+    if not ( select < count and select >= -1):
+        print("Please select one of the following audio inputs:")
+        for i in range(count):
+            print(f"{i} - {p.get_device_info_by_index(i)['name']}")
+        p.terminate()
+        sys.exit(0)
+    p.terminate()
 
 def parse_argument_monitor(select):
     if select != None:
@@ -54,6 +66,7 @@ def main():
     all_args.add_argument("-width", "--width", help="Set window width", default=900, type=int)
     all_args.add_argument("-height", "--height", help="Set window height", default=600, type=int)
     all_args.add_argument("-vsync", "--vsync", help="Set VSync, default off", default=VSync.DISABLE, type=VSync)
+    all_args.add_argument("-a", "--audio", help="Set audio input for shader. -1 - disable this feature", default=-1, type=int)
 
     args, files = all_args.parse_known_args()
     args = vars(args)
@@ -70,8 +83,10 @@ def main():
     Config.FRAMELIMIT = args["framelimit"]
     Config.QUALITY_MODE = args["qualitymode"]
     Config.VSYNC = args["vsync"]
+    Config.AUDIO = args["audio"]
 
     monitor = parse_argument_monitor(Config.DISPLAY)
+    parse_argument_audio(Config.AUDIO)
     if Config.VSYNC == VSync.ENABLE:
         frameLimiter = FrameLimiter("vsync")
     else:

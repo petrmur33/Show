@@ -31,6 +31,7 @@ glfw = "^2.5.3"
 Pillow = "^9.2.0"
 imageio = {extras = ["ffmpeg"], version = "^2.26.0"}
 PyQt6 = "^6.4.2"
+PyAudio = "^0.2.13"
 
 [tool.poetry.scripts]
 show = "show.main:main"

@@ -11,8 +11,10 @@ from fnmatch import fnmatch
 import imageio
 import logging
 import mouse
+import pyaudio
 import glfw
-import os
+import numpy as np
+
 
 log = logging.getLogger(__name__)
 
@@ -20,6 +22,21 @@ class ComponentShader():
     def __init__(self, path):
         with open(path, 'r') as file:
             source = file.read()
+
+        # PyAudio init
+        self.pa_device = Config.AUDIO
+        if self.pa_device != -1:
+            log.debug('pyaudio init')
+            self.pa_obj = pyaudio.PyAudio()
+            self.pa_device_info = self.pa_obj.get_device_info_by_index(self.pa_device)
+            self.pa_rate = int(self.pa_device_info['defaultSampleRate'])
+            self.pa_channels = 1
+            self.pa_chunk = 512
+            self.pa_format = pyaudio.paInt16
+            self.audio_stream = self.pa_obj.open(format=self.pa_format, channels=self.pa_channels, rate=self.pa_rate, input=True, frames_per_buffer=1, input_device_index=self.pa_device)
+            self.audio_texture = gl.glGenTextures(1)
+
+            self.FFT = lambda data: np.abs(np.fft.rfft(data)) / 10
 
         self.shader = Shader({
             gl.GL_VERTEX_SHADER: '''
@@ -50,21 +67,33 @@ class ComponentShader():
         height = int(show.height * Config.QUALITY)
 
         self.shader.bind()
-        gl.glActiveTexture(gl.GL_TEXTURE1)
-        gl.glBindTexture(gl.GL_TEXTURE_2D, show.texture) # prev frame
-        gl.glUniform1i(self.shader.get_uniform("currentBuffer"), 1)
-        gl.glActiveTexture(gl.GL_TEXTURE0)
-        gl.glBindTexture(gl.GL_TEXTURE_2D, show.prevTexture) # prev frame
-        gl.glUniform1i(self.shader.get_uniform("prevBuffer"), 0)
 
         gl.glUniform2f(self.shader.get_uniform("resolution"), width, height)
         gl.glUniform2f(self.shader.get_uniform("mouse"), mouseX, mouseY)
         gl.glUniform1f(self.shader.get_uniform("time"), self.elapsed)
+        
+        if self.pa_device != -1:
+            raw_data = self.audio_stream.read(self.pa_chunk, False)
+            raw_data = np.frombuffer(raw_data, dtype=np.int16)
+            data = self.FFT(raw_data)
+            gl.glActiveTexture(gl.GL_TEXTURE0)
+            gl.glBindTexture(gl.GL_TEXTURE_2D, self.audio_texture)
+            gl.glTexParameterf(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_BORDER)
+            gl.glTexParameterf(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_BORDER)
+            gl.glTexParameterf(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR_MIPMAP_LINEAR)
+            gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RGB, data.shape[0] // 2 + 1, 1, 0, gl.GL_RED, gl.GL_SHORT, data)
+            gl.glGenerateTextureMipmap(self.audio_texture)
 
         gl.glDrawArrays(gl.GL_TRIANGLES, 0, 6)
 
     def cleanup(self):
         del self.shader
+        if self.pa_device != -1:
+            log.debug('closing pyaudio')
+            self.pa_obj.terminate()
+
+    def __del__(self):
+        self.cleanup()
 
     @staticmethod
     def extensions():

@@ -24,3 +24,4 @@ class Config():
     FRAMELIMIT: int = 60
     QUALITY: float = 1.0
     QUALITY_MODE = QualityMode.SMOOTH
+    AUDIO = -1

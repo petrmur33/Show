@@ -68,6 +68,7 @@ class Show():
         self.texture, self.fbo = create_framebuffer(self.width, self.height)
         self.prevTexture = create_frametexture(self.width, self.height)
 
+        # TODO: ??
         log.debug('loading shaders and locations')
         self.shader_texture = Shader({
             gl.GL_VERTEX_SHADER: '''\
@@ -102,6 +103,8 @@ class Show():
                 }
                 ''',
         })
+
+        # TODO: replace this
         self.location_resolution = self.shader_texture.get_uniform("resolution")
         self.location_swap = self.shader_texture.get_uniform("swap")
         self.location_mvp = self.shader_texture.get_uniform("mvp")
@@ -194,7 +197,8 @@ class Show():
         gl.glViewport(0, 0, self.width, self.height)
         gl.glBindFramebuffer(gl.GL_FRAMEBUFFER, 0)  # unbind FBO to set the default framebuffer
         gl.glBindTexture(gl.GL_TEXTURE_2D, self.texture) # color attachment texture
-
+        
+        # TODO: ?
         self.shader_texture.bind()
         gl.glUniform2f(self.location_resolution, self.width, self.height)
         gl.glUniform1i(self.location_swap, Config.BACKGROUND_MODE == BackgroundMode.ROOT) # root mode needs to be swapped vertically 
@@ -336,14 +340,6 @@ class ShowWin10(Show):
             # width and height should not get to small
             self.width = max(nwidth, 10)
             self.height = max(nheight, 10)
-
-            # Delete existing framebuffer and create a new one with new scale
-            gl.glDeleteFramebuffers(1, self.fbo)
-            gl.glDeleteTextures(1, self.texture)
-            self.texture, self.fbo = create_framebuffer(self.width, self.height)
-
-            gl.glDeleteTextures(1, self.prevTexture)
-            self.prevTexture = create_frametexture(self.width, self.height)
 
     def __del__(self):
         log.debug("Remove parent")
